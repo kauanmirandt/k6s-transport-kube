@@ -34,7 +34,7 @@ class Network:
 
         # Creating switches and hosts
         for node in self.net_topology.nodes:
-            id = int(node) + 1  # Avoid id 0
+            id = int(node)
             # Switch
             curr_switch = self.net.addSwitch(
                 f"s{id}",
@@ -50,24 +50,18 @@ class Network:
             )
             self.hosts.append(curr_host)
             # Creating links between switch and host
-            self.net.addLink(self.hosts[int(id) - 1], self.switches[int(id) - 1])
+            self.net.addLink(self.hosts[int(id)], self.switches[int(id)])
 
         # Creating switch links
-        for edge in self.net_topology.edges:
-            src = int(self.net_topology.edges[edge[0]]["id"]) + 1
-            dst = int(self.net_topology.edges[edge[1]]["id"]) + 1
-            bw = self.net_topology.edges[edge].get(
-                topo_params["bandwidth"], link_default_values["bandwidth"]
-            )
-            delay = self.net_topology.edges[edge].get(
-                topo_params["delay"], link_default_values["delay"]
-            )
-            loss = self.net_topology.edges[edge].get(
-                topo_params["loss"], link_default_values["loss"]
-            )
+        for edge in self.net_topology.edges(data=True):
+            src = int(edge[0])
+            dst = int(edge[1])
+            bw = edge.get(topo_params["bandwidth"], link_default_values["bandwidth"])
+            delay = edge.get(topo_params["delay"], link_default_values["delay"])
+            loss = edge.get(topo_params["loss"], link_default_values["loss"])
             self.net.addLink(
-                self.switches[src - 1],
-                self.switches[dst - 1],
+                self.switches[src],
+                self.switches[dst],
                 bw=bw,
                 delay=delay,
                 loss=loss,
