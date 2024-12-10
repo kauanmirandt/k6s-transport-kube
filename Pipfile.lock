@@ -1,0 +1,47 @@
+{
+    "_meta": {
+        "hash": {
+            "sha256": "c55a5514653d04f60f1e856be5fb58ea7edff90380abfc33f3ddc1b67f1219a0"
+        },
+        "pipfile-spec": 6,
+        "requires": {
+            "python_full_version": "3.10.14",
+            "python_version": "3.10"
+        },
+        "sources": [
+            {
+                "name": "pypi",
+                "url": "https://pypi.org/simple",
+                "verify_ssl": true
+            }
+        ]
+    },
+    "default": {
+        "mininet": {
+            "hashes": [
+                "sha256:2175d04efa37dd6df86d1ff80e1f55d0d388c0edd0c8f0fc467c52a72799a85b",
+                "sha256:4d93983ab2709bf39764006d85b60b6ce1ee8897f8ebf1c3f848b7840f0632b8"
+            ],
+            "index": "pypi",
+            "version": "==2.3.0.dev6"
+        },
+        "networkx": {
+            "hashes": [
+                "sha256:307c3669428c5362aab27c8a1260aa8f47c4e91d3891f48be0141738d8d053e1",
+                "sha256:df5d4365b724cf81b8c6a7312509d0c22386097011ad1abe274afd5e9d3bbc5f"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.10'",
+            "version": "==3.4.2"
+        },
+        "setuptools": {
+            "hashes": [
+                "sha256:8199222558df7c86216af4f84c30e9b34a61d8ba19366cc914424cdbd28252f6",
+                "sha256:ce74b49e8f7110f9bf04883b730f4765b774ef3ef28f722cce7c273d253aaf7d"
+            ],
+            "markers": "python_version >= '3.9'",
+            "version": "==75.6.0"
+        }
+    },
+    "develop": {}
+}
