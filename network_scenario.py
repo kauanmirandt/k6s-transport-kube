@@ -77,8 +77,8 @@ class Network:
     def start(self, flows_description: dict, experiment_dir: str = "./logs"):
         self.net.start()
         info("Starting network\n")
-        # self.start_servers(flows_description, experiment_dir)
-        # self.start_clients(flows_description)
+        self.start_servers(flows_description, experiment_dir)
+        self.start_clients(flows_description)
         CLI(self.net)
         self.net.stop()
 

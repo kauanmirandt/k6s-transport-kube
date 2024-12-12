@@ -13,6 +13,10 @@ graph [
     id 2
     label "2"
   ]
+  node [
+	id 3
+	label "3"
+  ]
   edge [
     source 0
     target 1
@@ -20,8 +24,20 @@ graph [
     delay 0.323
   ]
   edge [
-    source 1
+    source 0
     target 2
+    capacity 100
+    delay 0.323
+  ]
+  edge [
+    source 1
+    target 3
+    capacity 100
+    delay 0.323
+  ]
+  edge [
+    source 2
+    target 3
     capacity 100
     delay 0.323
   ]
