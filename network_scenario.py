@@ -10,6 +10,7 @@ from mininet.link import TCLink
 import networkx as nx
 from typing import Optional
 import pathlib
+from time import sleep
 
 
 class Network:
@@ -74,12 +75,14 @@ class Network:
                 loss=loss,
             )
 
-    def start(self, flows_description: dict, experiment_dir: str = "./logs"):
+    def start(
+        self, exp_duration: int, flows_description: dict, experiment_dir: str = "./logs"
+    ):
         self.net.start()
         info("Starting network\n")
         self.start_servers(flows_description, experiment_dir)
         self.start_clients(flows_description)
-        CLI(self.net)
+        sleep(exp_duration)
         self.net.stop()
 
     def gen_mac_address(self, id: int):
@@ -129,6 +132,7 @@ def main():
         "delay": "delay",
         "loss": "loss",
     }
+    exp_duration = 12  # seconds
     flows_description = {
         "conn_0": {
             "src": 0,
@@ -167,7 +171,7 @@ def main():
         },
     }
     network = Network(topo_file="simple.txt", topo_params=topo_params)
-    network.start(flows_description=flows_description)
+    network.start(exp_duration=exp_duration, flows_description=flows_description)
 
 
 if __name__ == "__main__":
