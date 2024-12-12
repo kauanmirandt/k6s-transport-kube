@@ -140,7 +140,7 @@ def main():
                 "1": {
                     "duration": 10,
                     "traffic_pattern": "PERIODIC",
-                    "traffic_parameter": "[1000 1024]",
+                    "traffic_parameter": "[500 1024]",
                     "port": 5002,
                     "protocol": "UDP",
                 },
@@ -154,7 +154,7 @@ def main():
                 "0": {
                     "duration": 10,
                     "traffic_pattern": "PERIODIC",
-                    "traffic_parameter": "[1000 1024]",
+                    "traffic_parameter": "[100 1024]",
                     "port": 5003,
                     "protocol": "UDP",
                 },
