@@ -16,9 +16,15 @@ class Network:
     def __init__(self, topo_file: str, topo_params: Optional[dict] = None):
         self.net_topology = nx.read_gml(topo_file)
         self.net = Mininet(
-            # controller=RemoteController, switch=OVSKernelSwitch, link=TCLink
+            controller=RemoteController, switch=OVSKernelSwitch, link=TCLink
         )
-        self.net.addController("c0")
+        self.net.addController(
+            name="c0",
+            controller=RemoteController,
+            ip="127.0.0.1",  # ONOS running locally
+            protocol="tcp",
+            port=6653,
+        )
         self.switches = []
         self.hosts = []
         if topo_params is None:
@@ -35,7 +41,7 @@ class Network:
 
         # Creating switches and hosts
         for node in self.net_topology.nodes:
-            id = int(node)
+            id = int(node) + 1
             # Switch
             curr_switch = self.net.addSwitch(
                 f"s{id}",
@@ -51,7 +57,7 @@ class Network:
             )
             self.hosts.append(curr_host)
             # Creating links between switch and host
-            self.net.addLink(self.hosts[int(id)], self.switches[int(id)])
+            self.net.addLink(self.hosts[int(id) - 1], self.switches[int(id) - 1])
 
         # Creating switch links
         for edge in self.net_topology.edges(data=True):
@@ -71,8 +77,8 @@ class Network:
     def start(self, flows_description: dict, experiment_dir: str = "./logs"):
         self.net.start()
         info("Starting network\n")
-        self.start_servers(flows_description, experiment_dir)
-        self.start_clients(flows_description)
+        # self.start_servers(flows_description, experiment_dir)
+        # self.start_clients(flows_description)
         CLI(self.net)
         self.net.stop()
 
@@ -100,9 +106,8 @@ class Network:
 
     def start_clients(self, flows_description: dict):
         for _, conn_info in flows_description.items():
-            src = conn_info["src"]
             host_src = self.hosts[conn_info["src"]]
-            dst = conn_info["dst"]
+            dst = conn_info["dst"] + 1
             events = ""
             disable_flows = ""
             for flow_id, info in conn_info["flows"].items():
@@ -111,7 +116,7 @@ class Network:
                 duration = info["duration"]
                 traffic_pattern = info["traffic_pattern"]
                 traffic_parameter = info["traffic_parameter"]
-                events = f"{events} event '0.0 ON {flow_id} {protocol} SRC {port} DST 10.0.0.{dst+1}/{port} {traffic_pattern} {traffic_parameter}'"
+                events = f"{events} event '0.0 ON {flow_id} {protocol} SRC {port} DST 10.0.0.{dst}/{port} {traffic_pattern} {traffic_parameter}'"
                 disable_flows = f"{disable_flows} event '{duration} OFF {flow_id}'"
 
             host_src.cmd(f"mgen {events} {disable_flows} report &")
