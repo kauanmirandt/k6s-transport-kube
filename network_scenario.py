@@ -11,20 +11,35 @@ import networkx as nx
 from typing import Optional
 import pathlib
 from time import sleep
+from typing import Tuple
+import requests
+import json
 
 
 class Network:
-    def __init__(self, topo_file: str, topo_params: Optional[dict] = None):
+    def __init__(
+        self,
+        topo_file: str,
+        topo_params: Optional[dict] = None,
+        onos_addr: str = "127.0.0.1",
+        onos_port: int = 6653,
+        onos_api_port: int = 8181,
+        onos_user: str = "onos",
+        onos_pass: str = "rocks",
+    ):
         self.net_topology = nx.read_gml(topo_file)
         self.net = Mininet(
             controller=RemoteController, switch=OVSKernelSwitch, link=TCLink
         )
+        self.onos_api_adress = f"http://{onos_addr}:{onos_api_port}/onos/v1"
+        self.onos_user = onos_user
+        self.onos_pass = onos_pass
         self.net.addController(
             name="c0",
             controller=RemoteController,
-            ip="127.0.0.1",  # ONOS running locally
+            ip=onos_addr,
             protocol="tcp",
-            port=6653,
+            port=onos_port,
         )
         self.switches = []
         self.hosts = []
@@ -78,15 +93,23 @@ class Network:
     def start(
         self, exp_duration: int, flows_description: dict, experiment_dir: str = "./logs"
     ):
+        time_wait_traffics = 10  # seconds (if it is too small, the flows may not be available in the ONOS yet)
         self.net.start()
-        info("Starting network\n")
+        info("Mininet topology started\n")
         self.start_servers(flows_description, experiment_dir)
         self.start_clients(flows_description)
+        info("Traffic generator started\n")
+        sleep(time_wait_traffics)
+        self.get_onos_paths(flows_description, experiment_dir)
         sleep(exp_duration)
+        info(f"Experiment finished. You can find log information in {experiment_dir}\n")
         self.net.stop()
 
     def gen_mac_address(self, id: int):
         return f"00:00:00:00:00:{id:02x}"
+
+    def get_device_id(self, id: int):
+        return f"of:{(id+1):016d}"
 
     def start_servers(self, flows_description: dict, experiment_dir: str = "./logs"):
         for _, conn_info in flows_description.items():
@@ -124,6 +147,59 @@ class Network:
 
             host_src.cmd(f"mgen {events} {disable_flows} report &")
 
+    def get_onos_paths(self, flows_description: dict, experiment_dir: str = "./logs"):
+        flows, links = self.get_onos_flows_links()
+        conn_paths = {}
+        for conn_id, conn_info in flows_description.items():
+            src_dev_id = self.get_device_id(conn_info["src"])
+            dst_dev_id = self.get_device_id(conn_info["dst"])
+            src_port = "1"  # default host port det by ONOS
+            conn_paths[conn_id] = [src_dev_id]
+
+            while conn_paths[conn_id][-1] != dst_dev_id:
+                dst_port = None
+                curr_conn_path = conn_paths[conn_id].copy()
+                for flow in flows:  # Find flow rule that matches the src port
+                    if flow["deviceId"] == src_dev_id:
+                        for criteria in flow["selector"]["criteria"]:
+                            if criteria["type"] == "IN_PORT":
+                                if str(criteria["port"]) == src_port:
+                                    dst_port = flow["treatment"]["instructions"][0][
+                                        "port"
+                                    ]
+                    if dst_port is not None:
+                        break
+                for link in links:  # Find the link to the next device
+                    if (
+                        link["src"]["device"] == src_dev_id
+                        and link["src"]["port"] == dst_port
+                    ):
+                        src_port = link["dst"]["port"]
+                        src_dev_id = link["dst"]["device"]
+                        conn_paths[conn_id].append(src_dev_id)
+                        break
+                if conn_paths[conn_id] == curr_conn_path:
+                    raise Exception("No path found")
+
+        # Writing paths to external file
+        with open(f"{experiment_dir}/conn_paths.json", "w") as f:
+            json.dump(conn_paths, f)
+
+    def get_onos_flows_links(self) -> Tuple[list, list]:
+        flows = requests.get(
+            self.onos_api_adress + "/flows", auth=(self.onos_user, self.onos_pass)
+        )
+        links = requests.get(
+            self.onos_api_adress + "/links", auth=(self.onos_user, self.onos_pass)
+        )
+        if flows.status_code == 200 and links.status_code == 200:
+            flows = flows.json()
+            links = links.json()
+        else:
+            raise Exception("Failed to get flows and links from SDN controller")
+
+        return flows["flows"], links["links"]
+
 
 def main():
     setLogLevel("info")
@@ -132,7 +208,7 @@ def main():
         "delay": "delay",
         "loss": "loss",
     }
-    exp_duration = 12  # seconds
+    exp_duration = 30  # seconds
     flows_description = {
         "conn_0": {
             "src": 0,
@@ -140,14 +216,14 @@ def main():
             "report_period": 1,
             "flows": {
                 "0": {
-                    "duration": 10,
+                    "duration": 30,
                     "traffic_pattern": "PERIODIC",
                     "traffic_parameter": "[1000 1024]",
                     "port": 5001,
                     "protocol": "UDP",
                 },
                 "1": {
-                    "duration": 10,
+                    "duration": 30,
                     "traffic_pattern": "PERIODIC",
                     "traffic_parameter": "[500 1024]",
                     "port": 5002,
@@ -161,7 +237,7 @@ def main():
             "report_period": 1,
             "flows": {
                 "0": {
-                    "duration": 10,
+                    "duration": 30,
                     "traffic_pattern": "PERIODIC",
                     "traffic_parameter": "[100 1024]",
                     "port": 5003,
