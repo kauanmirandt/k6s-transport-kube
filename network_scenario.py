@@ -68,10 +68,10 @@ class Network:
                 loss=loss,
             )
 
-    def start(self, flows_description: dict):
+    def start(self, flows_description: dict, experiment_dir: str = "./logs"):
         self.net.start()
         info("Starting network\n")
-        self.start_servers(flows_description)
+        self.start_servers(flows_description, experiment_dir)
         self.start_clients(flows_description)
         CLI(self.net)
         self.net.stop()
@@ -79,7 +79,7 @@ class Network:
     def gen_mac_address(self, id: int):
         return f"00:00:00:00:00:{id:02x}"
 
-    def start_servers(self, flows_description: dict):
+    def start_servers(self, flows_description: dict, experiment_dir: str = "./logs"):
         for _, conn_info in flows_description.items():
             dst_host = self.hosts[conn_info["dst"]]
             dst = conn_info["dst"]
@@ -92,10 +92,10 @@ class Network:
                     ports = f"{ports},"
 
             # Create folder and log file
-            pathlib.Path("./logs/").mkdir(parents=True, exist_ok=True)
+            pathlib.Path(experiment_dir).mkdir(parents=True, exist_ok=True)
 
             dst_host.cmd(
-                f"mgen port {ports} analytics window {report_period} output logs/c_{src}-s_{dst}.log &"
+                f"(mgen port {ports} analytics window {report_period} output {experiment_dir}/c_{src}-s_{dst}.log) &"
             )
 
     def start_clients(self, flows_description: dict):
@@ -161,7 +161,7 @@ def main():
             },
         },
     }
-    network = Network("simple.txt", topo_params)
+    network = Network(topo_file="simple.txt", topo_params=topo_params)
     network.start(flows_description=flows_description)
 
 
