@@ -9,6 +9,7 @@ from mininet.log import setLogLevel, info
 from mininet.link import TCLink
 import networkx as nx
 from typing import Optional
+import pathlib
 
 
 class Network:
@@ -67,30 +68,53 @@ class Network:
                 loss=loss,
             )
 
-    def start(self):
+    def start(self, flows_description: dict):
         self.net.start()
         info("Starting network\n")
-        # self.hosts[0].cmd("mgen input client.mgn &")
-        # self.hosts[1].cmd("mgen input server.mgn &")
+        self.start_servers(flows_description)
+        self.start_clients(flows_description)
         CLI(self.net)
         self.net.stop()
 
-    def gen_mac_address(self, id):
+    def gen_mac_address(self, id: int):
         return f"00:00:00:00:00:{id:02x}"
 
-    def start_servers(self, flows_description):
-        for flow, info in flows_description.items():
-            src = self.hosts[info["src"]]
-            dst = self.hosts[info["dst"]]
-            protocol = info["protocol"]
-            port = info["port"]
-            duration = info["duration"]
-            traffic_pattern = info["traffic_pattern"]
-            windows = info["report_period"]
+    def start_servers(self, flows_description: dict):
+        for _, conn_info in flows_description.items():
+            dst_host = self.hosts[conn_info["dst"]]
+            dst = conn_info["dst"]
+            src = conn_info["src"]
+            report_period = conn_info["report_period"]
+            ports = ""
+            for flow_id, info in conn_info["flows"].items():
+                ports = f"{ports}{info['port']}"
+                if flow_id != list(conn_info["flows"].keys())[-1]:
+                    ports = f"{ports},"
 
-            dst.cmd(
-                f"h{dst} mgen port {port} report analytics window {windows} output logs/host_{dst}.log"
+            # Create folder and log file
+            pathlib.Path("./logs/").mkdir(parents=True, exist_ok=True)
+
+            dst_host.cmd(
+                f"mgen port {ports} analytics window {report_period} output logs/c_{src}-s_{dst}.log &"
             )
+
+    def start_clients(self, flows_description: dict):
+        for _, conn_info in flows_description.items():
+            src = conn_info["src"]
+            host_src = self.hosts[conn_info["src"]]
+            dst = conn_info["dst"]
+            events = ""
+            disable_flows = ""
+            for flow_id, info in conn_info["flows"].items():
+                protocol = info["protocol"]
+                port = info["port"]
+                duration = info["duration"]
+                traffic_pattern = info["traffic_pattern"]
+                traffic_parameter = info["traffic_parameter"]
+                events = f"{events} event '0.0 ON {flow_id} {protocol} SRC {port} DST 10.0.0.{dst+1}/{port} {traffic_pattern} {traffic_parameter}'"
+                disable_flows = f"{disable_flows} event '{duration} OFF {flow_id}'"
+
+            host_src.cmd(f"mgen {events} {disable_flows} report &")
 
 
 def main():
@@ -101,32 +125,45 @@ def main():
         "loss": "loss",
     }
     flows_description = {
-        "flow1": {
+        "conn_0": {
             "src": 0,
             "dst": 2,
-            "protocol": "TCP",
-            "port": 5001,
-            "duration": 10,
-            "traffic_pattern": "periodic",  # Can be periodic periodic, poisson, burst
-            "report_period": 1,  # Seconds
+            "report_period": 1,
+            "flows": {
+                "0": {
+                    "duration": 10,
+                    "traffic_pattern": "PERIODIC",
+                    "traffic_parameter": "[1000 1024]",
+                    "port": 5001,
+                    "protocol": "UDP",
+                },
+                "1": {
+                    "duration": 10,
+                    "traffic_pattern": "PERIODIC",
+                    "traffic_parameter": "[1000 1024]",
+                    "port": 5002,
+                    "protocol": "UDP",
+                },
+            },
         },
-        "flow2": {
-            "src": 0,
+        "conn_1": {
+            "src": 1,
             "dst": 2,
-            "protocol": "UDP",
-            "port": 5002,
-            "duration": 10,
-            "traffic_pattern": "poisson",  # Can be periodic periodic, poisson, burst
-            "report_period": 1,  # Seconds
+            "report_period": 1,
+            "flows": {
+                "0": {
+                    "duration": 10,
+                    "traffic_pattern": "PERIODIC",
+                    "traffic_parameter": "[1000 1024]",
+                    "port": 5003,
+                    "protocol": "UDP",
+                },
+            },
         },
     }
     network = Network("simple.txt", topo_params)
-    network.start()
+    network.start(flows_description=flows_description)
 
 
 if __name__ == "__main__":
     main()
-
-# h2 mgen port 5001,5002 report analytics window 1 output logs/server.log
-# h2 {mgen port 5001,5002 report analytics window 1 2>&1 | grep 'REPORT' > logs/server.log;} &
-# h0 mgen report analytics window 1 event "0.0 ON 1 UDP SRC 5001 DST 10.0.0.3/5001 PERIODIC [1000 1024]" event "10.0 OFF 1"
