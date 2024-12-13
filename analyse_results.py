@@ -3,7 +3,7 @@ from os.path import isfile, join
 import re
 import matplotlib.pyplot as plt
 
-logs_dir = "./logs"
+logs_dir = "./logs/example"
 
 log_files = [file for file in listdir(logs_dir) if isfile(join(logs_dir, file))]
 flows = {

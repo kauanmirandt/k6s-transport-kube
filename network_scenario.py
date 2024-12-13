@@ -91,11 +91,16 @@ class Network:
             )
 
     def start(
-        self, exp_duration: int, flows_description: dict, experiment_dir: str = "./logs"
+        self,
+        time_wait_topology: int,
+        time_wait_traffics: int,
+        exp_duration: int,
+        flows_description: dict,
+        experiment_dir: str = "./logs",
     ):
-        time_wait_traffics = 10  # seconds (if it is too small, the flows may not be available in the ONOS yet)
         self.net.start()
         info("Mininet topology started\n")
+        sleep(time_wait_topology)
         self.start_servers(flows_description, experiment_dir)
         self.start_clients(flows_description)
         info("Traffic generator started\n")
@@ -208,7 +213,9 @@ def main():
         "delay": "delay",
         "loss": "loss",
     }
-    exp_duration = 30  # seconds
+    time_wait_topology = 20  # seconds (if it is too small, the topology may not be available in the ONOS yet)
+    time_wait_traffics = 10  # seconds (if it is too small, the flows may not be available in the ONOS yet)
+    exp_duration = 30  # seconds (Will close the mininet topology after this time + time_wait_topology + time_wait_traffics)
     flows_description = {
         "conn_0": {
             "src": 0,
@@ -247,7 +254,12 @@ def main():
         },
     }
     network = Network(topo_file="simple.txt", topo_params=topo_params)
-    network.start(exp_duration=exp_duration, flows_description=flows_description)
+    network.start(
+        time_wait_topology=time_wait_topology,
+        time_wait_traffics=time_wait_traffics,
+        exp_duration=exp_duration,
+        flows_description=flows_description,
+    )
 
 
 if __name__ == "__main__":
