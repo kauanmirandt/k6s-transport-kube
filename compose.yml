@@ -1,6 +1,6 @@
 services:
   onos:
-    image: onosproject/onos:2.7-latest
+    image: onosproject/onos:2.6-latest
     container_name: onos
     ports:
       - "8181:8181"
