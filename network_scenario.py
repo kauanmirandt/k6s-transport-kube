@@ -132,7 +132,7 @@ class Network:
             pathlib.Path(experiment_dir).mkdir(parents=True, exist_ok=True)
 
             dst_host.cmd(
-                f"(mgen port {ports} analytics window {report_period} output {experiment_dir}/c_{src}-s_{dst}.log) &"
+                f"bash -c '(mgen port {ports} analytics window {report_period} | grep REPORT > {experiment_dir}/c_{src}-s_{dst}.log)'&"
             )
 
     def start_clients(self, flows_description: dict):
