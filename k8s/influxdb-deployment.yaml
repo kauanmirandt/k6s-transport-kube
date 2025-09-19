@@ -1,0 +1,43 @@
+# k8s/influxdb-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: influxdb2
+  namespace: transport-network
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: influxdb2
+  template:
+    metadata:
+      labels:
+        app: influxdb2
+    spec:
+      containers:
+      - name: influxdb2
+        image: influxdb:2
+        env:
+        - name: DOCKER_INFLUXDB_INIT_MODE
+          value: setup
+        - name: DOCKER_INFLUXDB_INIT_USERNAME
+          value: admin
+        - name: DOCKER_INFLUXDB_INIT_PASSWORD
+          value: password
+        - name: DOCKER_INFLUXDB_INIT_ADMIN_TOKEN
+          value: myfantasticstokentoday
+        - name: DOCKER_INFLUXDB_INIT_ORG
+          value: lasse
+        - name: DOCKER_INFLUXDB_INIT_BUCKET
+          value: initial
+        - name: DOCKER_INFLUXDB_INIT_RETENTION
+          value: 30d
+        ports:
+        - containerPort: 8086
+        volumeMounts:
+        - name: influxdb2-data
+          mountPath: /var/lib/influxdb2
+      volumes:
+      - name: influxdb2-data
+        persistentVolumeClaim:
+          claimName: influxdb2-data

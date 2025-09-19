@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: onos
+  namespace: transport-network
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: onos
+  template:
+    metadata:
+      labels:
+        app: onos
+    spec:
+      containers:
+      - name: onos
+        image: onosproject/onos:2.6-latest
+        ports:
+        - containerPort: 8181
+        - containerPort: 8101
+        - containerPort: 5005
+        - containerPort: 830
+        - containerPort: 6653

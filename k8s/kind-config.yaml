@@ -1,0 +1,27 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: k6s
+nodes:
+- role: control-plane
+  extraPortMappings:
+  - containerPort: 30181   # ONOS REST API (NodePort)
+    hostPort: 30181
+    protocol: TCP
+  - containerPort: 30101   # ONOS CLI (Karaf)
+    hostPort: 30101
+    protocol: TCP
+  - containerPort: 30505   # ONOS Debug (Java Debug)
+    hostPort: 30505
+    protocol: TCP
+  - containerPort: 30083   # ONOS Netconf
+    hostPort: 30083
+    protocol: TCP
+  - containerPort: 31653   # ONOS OpenFlow
+    hostPort: 31653
+    protocol: TCP
+  - containerPort: 30086   # InfluxDB (exemplo)
+    hostPort: 30086
+    protocol: TCP
+  - containerPort: 31000   # Grafana NodePort
+    hostPort: 31000
+    protocol: TCP

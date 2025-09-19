@@ -1,0 +1,14 @@
+# k8s/influxdb-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: influxdb2
+  namespace: transport-network
+spec:
+  type: NodePort
+  selector:
+    app: influxdb2
+  ports:
+  - port: 8086
+    targetPort: 8086
+    nodePort: 30086

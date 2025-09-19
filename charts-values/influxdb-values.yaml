@@ -1,0 +1,12 @@
+service:
+  type: NodePort
+  port: 8086
+  targetPort: 8086
+  nodePort: 30086
+
+adminUser:
+  organization: "lasse"
+  bucket: "initial"
+  user: "admin"
+  password: "password"
+  token: "influxdbtoken"

@@ -1,0 +1,8 @@
+resources:
+  - namespaces.yaml
+  # - influxdb-pvc.yaml
+  # - influxdb-deployment.yaml
+  # - influxdb-service.yaml
+  # - onos-deployment.yaml
+  # - onos-plugins-job.yaml
+  # - onos-service.yaml

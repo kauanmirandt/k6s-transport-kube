@@ -1,0 +1,51 @@
+# telegraf-values.yaml
+config:
+  agent:
+    interval: "5s"
+    flush_interval: "6s"
+    debug: true
+    quiet: false
+
+  outputs:
+    # Saída para o InfluxDB
+    - influxdb_v2:
+        urls:
+          - "http://influxdb-service.default.svc.cluster.local:8086" 
+        token: "${INFLUX_TOKEN}" 
+        organization: "lasse"
+        bucket: "devices_ports"
+
+  inputs:
+    - http:
+        urls:
+          - "http://onos-service.default.svc.cluster.local:8181/onos/v1/statistics/ports"
+        method: "GET"
+        username: "${ONOS_USERNAME}" 
+        password: "${ONOS_PASSWORD}" 
+        name_override: "device_ports"
+        tagexclude:
+          - "url"
+          - "host"
+        data_format: "json_v2"
+        timeout: "5s"
+        json_v2:
+          - measurement_name: "device_ports"
+            object:
+              - path: "statistics"
+                disable_prepend_keys: false
+                tags:
+                  - "device"
+                  - "ports_port"
+                renames:
+                  ports_port: "port"
+                  ports_bytesReceived: "bytesReceived"
+                  ports_bytesSent: "bytesSent"
+                  ports_packetsReceived: "packetsReceived"
+                  ports_packetsSent: "packetsSent"
+                fields:
+                  ports_bytesReceived: "uint"
+                  ports_bytesSent: "uint"
+                  ports_packetsReceived: "uint"
+                  ports_packetsSent: "uint"
+
+envFromSecret: "telegraf-credentials"

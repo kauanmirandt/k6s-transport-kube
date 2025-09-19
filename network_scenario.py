@@ -22,8 +22,8 @@ class Network:
         topo_file: str,
         topo_params: Optional[dict] = None,
         onos_addr: str = "127.0.0.1",
-        onos_port: int = 6653,
-        onos_api_port: int = 8181,
+        onos_port: int = 31653,
+        onos_api_port: int = 30181,
         onos_user: str = "onos",
         onos_pass: str = "rocks",
     ):
@@ -31,6 +31,7 @@ class Network:
         self.net = Mininet(
             controller=RemoteController, switch=OVSKernelSwitch, link=TCLink
         )
+        
         self.onos_api_adress = f"http://{onos_addr}:{onos_api_port}/onos/v1"
         self.onos_user = onos_user
         self.onos_pass = onos_pass
@@ -41,8 +42,10 @@ class Network:
             protocol="tcp",
             port=onos_port,
         )
+        
         self.switches = []
         self.hosts = []
+        
         if topo_params is None:
             topo_params = {
                 "bandwidth": "bandwidth",
@@ -108,7 +111,8 @@ class Network:
         self.get_onos_paths(flows_description, experiment_dir)
         sleep(exp_duration)
         info(f"Experiment finished. You can find log information in {experiment_dir}\n")
-        self.net.stop()
+        # self.net.stop()
+        # CLI(self.net)
 
     def gen_mac_address(self, id: int):
         return f"00:00:00:00:00:{id:02x}"
@@ -215,7 +219,7 @@ def main():
     }
     time_wait_topology = 20  # seconds (if it is too small, the topology may not be available in the ONOS yet)
     time_wait_traffics = 10  # seconds (if it is too small, the flows may not be available in the ONOS yet)
-    exp_duration = 30  # seconds (Will close the mininet topology after this time + time_wait_topology + time_wait_traffics)
+    exp_duration = 300  # seconds (Will close the mininet topology after this time + time_wait_topology + time_wait_traffics)
     flows_description = {
         "conn_0": {
             "src": 0,
@@ -223,14 +227,14 @@ def main():
             "report_period": 1,
             "flows": {
                 "0": {
-                    "duration": 30,
+                    "duration": 300,
                     "traffic_pattern": "PERIODIC",
                     "traffic_parameter": "[1000 1024]",
                     "port": 5001,
                     "protocol": "UDP",
                 },
                 "1": {
-                    "duration": 30,
+                    "duration": 300,
                     "traffic_pattern": "PERIODIC",
                     "traffic_parameter": "[500 1024]",
                     "port": 5002,
@@ -244,7 +248,7 @@ def main():
             "report_period": 1,
             "flows": {
                 "0": {
-                    "duration": 30,
+                    "duration": 300,
                     "traffic_pattern": "PERIODIC",
                     "traffic_parameter": "[100 1024]",
                     "port": 5003,

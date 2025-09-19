@@ -1,0 +1,9 @@
+service:
+  type: NodePort
+  port: 3000
+  targetPort: 3000
+  nodePort: 31000 
+
+persistence:
+  type: pvc
+  enabled: true
