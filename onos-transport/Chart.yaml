@@ -1,6 +1,0 @@
-apiVersion: v2
-name: onos
-description: "Simple, from-scratch Helm chart for ONOS (based on Cleverson's deployment)"
-type: application
-version: 0.1.0
-appVersion: "2.6"
