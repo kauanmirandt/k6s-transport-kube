@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "onos.fullname" . }}
+  namespace: {{ default "transport-network" .Values.namespace }}
+spec:
+  replicas: {{ default 1 .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "onos.selectorName" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "onos.selectorName" . }}
+    spec:
+      containers:
+      - name: onos
+        image: "{{ printf "%s:%s" (default "onosproject/onos" .Values.image.repository) (default "2.6-latest" .Values.image.tag) }}"
+        ports:
+        - containerPort: {{ default 8181 .Values.service.ports.rest.port }}
+        - containerPort: {{ default 8101 .Values.service.ports.karaf.port }}
+        - containerPort: {{ default 5005 .Values.service.ports.debug.port }}
+        - containerPort: {{ default 830 .Values.service.ports.netconf1.port }}
+        - containerPort: {{ default 6653 .Values.service.ports.openflow.port }}

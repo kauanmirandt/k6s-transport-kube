@@ -1,0 +1,9 @@
+ONOS chart
+
+1. Namespace: {{ default "transport-network" .Values.namespace }}
+2. Service name: {{ default "onos-service" .Values.service.name }}
+3. To install:
+   helm install my-onos ./onos-chart --namespace {{ default "transport-network" .Values.namespace }} --create-namespace
+
+4. To override a value quickly:
+   helm install my-onos ./onos-chart --set replicaCount=3 --set service.type=ClusterIP

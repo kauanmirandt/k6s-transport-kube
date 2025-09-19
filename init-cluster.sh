@@ -39,7 +39,8 @@ kubectl apply -k k8s/
 kubectl create secret generic telegraf-credentials \
   --from-literal=INFLUX_TOKEN='influxdbtoken' \
   --from-literal=ONOS_USERNAME='onos' \
-  --from-literal=ONOS_PASSWORD='rocks'
+  --from-literal=ONOS_PASSWORD='rocks' \
+  -n telemetry
 
 helm upgrade --install grafana grafana/grafana \
   -n monitoring \
@@ -54,7 +55,7 @@ helm upgrade --install influxdb influxdata/influxdb2 \
 helm upgrade --install onos onos-transport \
   -n transport-network \
 
-watch -n 2 kubectl get deployments -A && \
-  kubectl get jobs -A && \
-  kubectl get services -A && \
-  kubectl get pods -A 
+kubectl get deployments -A
+kubectl get jobs -A 
+kubectl get services -A 
+kubectl get pods -A 

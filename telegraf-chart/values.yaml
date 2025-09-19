@@ -1,0 +1,25 @@
+# telegraf/values.yaml
+replicaCount: 1
+
+image:
+  repository: "docker.io/library/telegraf"
+  tag: "1.35-alpine"
+  pullPolicy: IfNotPresent
+
+envFromSecret: ""
+
+rawConfig: |-
+  [agent]
+    interval = "10s"
+    flush_interval = "10s"
+    debug = false
+    quiet = false
+
+  [[outputs.file]]
+    files = ["stdout"]
+
+  [[inputs.cpu]]
+    percpu = true
+    totalcpu = true
+    collect_cpu_time = false
+    report_active = false

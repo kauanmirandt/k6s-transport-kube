@@ -1,51 +1,48 @@
 # telegraf-values.yaml
-config:
-  agent:
-    interval: "5s"
-    flush_interval: "6s"
-    debug: true
-    quiet: false
+rawConfig: |-
+  [agent]
+  interval = "5s"
+  flush_interval = "6s"
+  debug = true
+  quiet = false
 
-  outputs:
-    # Saída para o InfluxDB
-    - influxdb_v2:
-        urls:
-          - "http://influxdb-service.default.svc.cluster.local:8086" 
-        token: "${INFLUX_TOKEN}" 
-        organization: "lasse"
-        bucket: "devices_ports"
+  [[outputs.influxdb_v2]]
+    urls = ["http://influxdb-influxdb2.database.svc.cluster.local:8086" ]
+    token = "influxdbtoken"
+    organization = "lasse"
+    bucket = "devices_ports"
 
-  inputs:
-    - http:
-        urls:
-          - "http://onos-service.default.svc.cluster.local:8181/onos/v1/statistics/ports"
-        method: "GET"
-        username: "${ONOS_USERNAME}" 
-        password: "${ONOS_PASSWORD}" 
-        name_override: "device_ports"
-        tagexclude:
-          - "url"
-          - "host"
-        data_format: "json_v2"
-        timeout: "5s"
-        json_v2:
-          - measurement_name: "device_ports"
-            object:
-              - path: "statistics"
-                disable_prepend_keys: false
-                tags:
-                  - "device"
-                  - "ports_port"
-                renames:
-                  ports_port: "port"
-                  ports_bytesReceived: "bytesReceived"
-                  ports_bytesSent: "bytesSent"
-                  ports_packetsReceived: "packetsReceived"
-                  ports_packetsSent: "packetsSent"
-                fields:
-                  ports_bytesReceived: "uint"
-                  ports_bytesSent: "uint"
-                  ports_packetsReceived: "uint"
-                  ports_packetsSent: "uint"
+  [[inputs.http]]
+    urls = ["http://onos-service.transport-network.svc.cluster.local:8181/onos/v1/statistics/ports"]
+    method = "GET"
+    username = "onos"
+    password = "rocks"
+    name_override = "device_ports"
+    tagexclude = ["url", "host"]
+    data_format = "json_v2"
+    timeout = "5s"
+
+    # JSON parsing para arrays
+    [[inputs.http.json_v2]]
+      measurement_name = "device_ports"
+
+      # Itera cada switch no array "statistics"
+      [[inputs.http.json_v2.object]]
+        path = "statistics"
+        disable_prepend_keys = false
+        tags = ["device", "ports_port"]
+
+        [inputs.http.json_v2.object.renames]
+          ports_port = "port"
+          ports_bytesReceived = "bytesReceived"
+          ports_bytesSent = "bytesSent"
+          ports_packetsReceived = "packetsReceived"
+          ports_packetsSent = "packetsSent"
+
+        [inputs.http.json_v2.object.fields]
+          ports_bytesReceived = "uint"
+          ports_bytesSent     = "uint"
+          ports_packetsReceived = "uint"
+          ports_packetsSent = "uint"
 
 envFromSecret: "telegraf-credentials"

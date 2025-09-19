@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "telegraf.fullname" . }}
+  labels:
+    {{- include "telegraf.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Chart.Name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      annotations:
+        # Esta anotação força o pod a reiniciar quando rawConfig muda
+        checksum/config: {{ .Values.rawConfig | sha256sum }}
+      labels:
+        app.kubernetes.io/name: {{ .Chart.Name }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: telegraf
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        # A Lógica Corrigida: Só adiciona o envFrom se envFromSecret tiver um valor real
+        {{- if and .Values.envFromSecret (ne .Values.envFromSecret "") }}
+        envFrom:
+          - secretRef:
+              name: {{ .Values.envFromSecret }}
+        {{- end }}
+        volumeMounts:
+        - name: config
+          mountPath: /etc/telegraf
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "telegraf.fullname" . }}-config
+
