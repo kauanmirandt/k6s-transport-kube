@@ -52,7 +52,7 @@ helm upgrade --install influxdb influxdata/influxdb2 \
   -n database \
   -f charts-values/influxdb-values.yaml 
 
-helm upgrade --install onos onos-transport \
+helm upgrade --install onos ./onos-transport-chart \
   -n transport-network \
 
 kubectl get deployments -A
